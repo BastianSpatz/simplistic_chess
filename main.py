@@ -91,6 +91,7 @@ def main():
 					else:
 						print('Move not found')
 					print(move.get_chess_notation())
+					print('\n')
 					# reset user input
 					squareSelected = ()
 					playerClicks = []

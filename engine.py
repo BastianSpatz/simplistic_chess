@@ -95,13 +95,155 @@ class GameState(object):
 					moves.append(Move((row, col), (row + 1, col + 1), self.board)) 
 
 	def generate_rook_moves(self, row, col, moves):
-		pass
+		if self.whiteToMove:
+			counterRow = 1
+			while row + counterRow <= 7 and self.board[row + counterRow][col][0] != "w":
+				if self.board[row+counterRow][col] == "--":
+					moves.append(Move((row, col), (row + counterRow, col), self.board))
+				if self.board[row+counterRow][col][0] == "b":
+					moves.append(Move((row, col), (row + counterRow, col), self.board))
+					break
+				counterRow +=1
+			counterRow = 1
+			while row - counterRow >= 0 and self.board[row - counterRow][col][0] != "w":
+				if self.board[row - counterRow][col] == "--":
+					moves.append(Move((row, col), (row - counterRow, col), self.board))
+				if self.board[row - counterRow][col][0] == "b":
+					moves.append(Move((row, col), (row - counterRow, col), self.board))
+					break
+				counterRow +=1
+			counterCol = 1
+			while col + counterCol <= 7 and self.board[row][col + counterCol][0] != "w":
+				if self.board[row][col + counterCol] == "--":
+					moves.append(Move((row, col), (row, col + counterCol), self.board))
+				if self.board[row][col + counterCol][0] == "b":
+					moves.append(Move((row, col), (row, col + counterCol), self.board))
+					break
+				if self.board[row][col + counterCol][0] == "w":
+					break
+				counterCol +=1
+			counterCol = 1
+			while col - counterCol >= 0 and self.board[row][col - counterCol][0] != "w":
+				if self.board[row][col - counterCol] == "--":
+					moves.append(Move((row, col), (row, col - counterCol), self.board))
+				if self.board[row][col - counterCol][0] == "b":
+					moves.append(Move((row, col), (row, col - counterCol), self.board))
+					break
+				if self.board[row][col - counterCol][0] == "w":
+					break
+				counterCol +=1
+
+		if not self.whiteToMove:
+			counterRow = 1
+			while row + counterRow <= 7 and self.board[row + counterRow][col][0] != "b":
+				if self.board[row+counterRow][col] == "--":
+					moves.append(Move((row, col), (row + counterRow, col), self.board))
+				if self.board[row+counterRow][col][0] == "w":
+					moves.append(Move((row, col), (row + counterRow, col), self.board))
+					break
+				counterRow +=1
+			counterRow = 1
+			while row - counterRow >= 0 and self.board[row - counterRow][col][0] != "b":
+				if self.board[row - counterRow][col] == "--":
+					moves.append(Move((row, col), (row - counterRow, col), self.board))
+				if self.board[row - counterRow][col][0] == "w":
+					moves.append(Move((row, col), (row - counterRow, col), self.board))
+					break
+				counterRow +=1
+			counterCol = 1
+			while col + counterCol <= 7 and self.board[row][col + counterCol][0] != "b":
+				if self.board[row][col + counterCol] == "--":
+					moves.append(Move((row, col), (row, col + counterCol), self.board))
+				if self.board[row][col + counterCol][0] == "w":
+					moves.append(Move((row, col), (row, col + counterCol), self.board))
+					break
+				if self.board[row][col + counterCol][0] == "b":
+					break
+				counterCol +=1
+			counterCol = 1
+			while col - counterCol >= 0 and self.board[row][col - counterCol][0] != "b":
+				if self.board[row][col - counterCol] == "--":
+					moves.append(Move((row, col), (row, col - counterCol), self.board))
+				if self.board[row][col - counterCol][0] == "w":
+					moves.append(Move((row, col), (row, col - counterCol), self.board))
+					break
+				if self.board[row][col - counterCol][0] == "b":
+					break
+				counterCol +=1
 
 	def generate_knight_moves(self, row, col, moves):
-		pass
+		'''
+		We have a maximum of eight squares we can end up in using the knight
+		'''
+		SqOne = [row - 2, col - 1]
+		SqTwo = [row - 2, col + 1]
+		SqThree = [row - 1, col - 2]
+		SqFour= [row - 1, col + 2]
+		SqFive = [row + 2, col - 1]
+		SqSix = [row + 2, col + 1]
+		SqSeven = [row + 1, col - 2]
+		SqEight = [row + 1, col + 2]
+		Squares = [SqOne, SqTwo, SqThree, SqFour, SqFive, SqSix, SqSeven, SqEight]
+		for Sq in Squares.copy():
+			if (Sq[0]<0 or Sq[0]>7):
+				Squares.remove(Sq)
+			elif (Sq[1]<0 or Sq[1]>7):
+				Squares.remove(Sq)
+		for Sq in Squares:
+			if self.whiteToMove and (self.board[Sq[0]][Sq[1]] == "--" or self.board[Sq[0]][Sq[1]][0] == "b"):
+				moves.append(Move((row, col), (Sq[0], Sq[1]), self.board))
+			elif not self.whiteToMove and (self.board[Sq[0]][Sq[1]] == "--" or self.board[Sq[0]][Sq[1]][0] == "w"):
+				moves.append(Move((row, col), (Sq[0], Sq[1]), self.board))				 
 
 	def generate_bishop_moves(self, row, col, moves):
-		pass
+
+		if self.whiteToMove:
+			# white movement down and to the right
+			counterRow = 1
+			counterCol = 1
+			while row + counterRow <= 7 and col + counterCol <= 7 and self.board[row + counterRow][col + counterCol][0] != "w":
+				if self.board[row+counterRow][col + counterCol] == "--":
+					moves.append(Move((row, col), (row + counterRow, col + counterCol), self.board))
+				if self.board[row+counterRow][col + counterCol][0] == "b":
+					moves.append(Move((row, col), (row + counterRow, col + counterCol), self.board))
+					break
+				counterRow +=1
+				counterCol +=1
+
+			# white movement down and to the left
+			counterRow = 1
+			counterCol = 1
+			while row + counterRow <= 7 and col - counterCol >= 0 and self.board[row + counterRow][col - counterCol][0] != "w":
+				if self.board[row+counterRow][col - counterCol] == "--":
+					moves.append(Move((row, col), (row + counterRow, col - counterCol), self.board))
+				if self.board[row+counterRow][col - counterCol][0] == "b":
+					moves.append(Move((row, col), (row + counterRow, col - counterCol), self.board))
+					break
+				counterRow +=1
+				counterCol +=1
+
+			# white movement up and to the left
+			counterRow = 1
+			counterCol = 1
+			while row - counterRow >= 0 and col + counterCol <= 7 and self.board[row - counterRow][col + counterCol][0] != "w":
+				if self.board[row - counterRow][col + counterCol] == "--":
+					moves.append(Move((row, col), (row - counterRow, col + counterCol), self.board))
+				if self.board[row - counterRow][col + counterCol][0] == "b":
+					moves.append(Move((row, col), (row - counterRow, col + counterCol), self.board))
+					break
+				counterRow +=1
+				counterCol +=1
+
+			counterRow = 1
+			counterCol = 1
+			while row - counterRow >= 0 and col - counterCol >= 0  and self.board[row - counterRow][col - counterCol][0] != "w":
+				if self.board[row - counterRow][col - counterCol] == "--":
+					moves.append(Move((row, col), (row - counterRow, col - counterCol), self.board))
+				if self.board[row - counterRow][col - counterCol][0] == "b":
+					moves.append(Move((row, col), (row - counterRow, col - counterCol), self.board))
+					break
+				counterRow +=1
+				counterCol +=1
 
 	def generate_queen_moves(self, row, col, moves):
 		pass
@@ -129,7 +271,6 @@ class Move(object):
 		self.movedPiece = board[self.startRow][self.startCol]
 		self.capturedPiece = board[self.endRow][self.endCol]
 		self.moveId = self.startRow * 1000 + self.startCol * 100 + self.endRow * 10 + self.endCol
-		print(self.moveId)
 
 	def __eq__(self, other):
 		if isinstance(other, Move):
@@ -146,28 +287,6 @@ class Move(object):
 						
 
 
-class Pawn(object):
-	"""docstring for Pawn"""
-	def __init__(self, position, board, whiteToMove):
-		self.row = position[2]
-		self.col = position[1]
-		self.moved = False
-		self.whiteToMove = whiteToMove
-		self.board = board
-		self.moves = []
-
-	def generate_possible_moves(self):
-		"""
-		Logic for all the pawn moves
-		"""
-		if self.whiteToMove:
-			if self.board[self.row - 1][self.col] == "--": # on square move
-				self.moves.append(Move((self.row, self.col), (self.row - 1, self.col), self.board))
-
-				if self.board[self.row - 2][self.col] == "--" and self.row == "6": # two square move
-					self.moves.append(Move((self.row, self.col), (self.row - 2, self.col), self.board))
-
-		return self.moves
 
 
 		
