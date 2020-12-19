@@ -29,7 +29,7 @@ def draw_pieces(screen, board):
 			if piece != "--":
 				screen.blit(IMAGES[piece], (col*SQ_SIZE, row*SQ_SIZE))
 
-def highlight_square(screen, gamestate, squareSelected):
+def highlight_square(screen, gamestate, squareSelected, allMoves):
 		if squareSelected != ():
 			row, col = squareSelected
 			if gamestate.board[row][col][0] == ("w" if gamestate.whiteToMove else "b"):
@@ -38,11 +38,14 @@ def highlight_square(screen, gamestate, squareSelected):
 				s.fill(p.Color("blue"))
 				screen.blit(s, (col*SQ_SIZE, row*SQ_SIZE))
 				s.fill(p.Color("yellow"))
+				for move in allMoves:
+					if move.startRow == row and move.startCol == col:
+						screen.blit(s, (move.endCol*SQ_SIZE, move.endRow*SQ_SIZE))
 
 
-def draw_gamestate(screen, gamestate, squareSelected):
+def draw_gamestate(screen, gamestate, squareSelected, allMoves):
 	draw_board(screen) #draw the squares
-	highlight_square(screen, gamestate, squareSelected) #highlight the squares
+	highlight_square(screen, gamestate, squareSelected, allMoves) #highlight the squares
 	draw_pieces(screen, gamestate.board) #draw pieces ontop of screen
 
 
@@ -98,8 +101,8 @@ def main():
 					
 					# gamestate.make_move(move)
 
-
-		draw_gamestate(screen, gamestate, squareSelected)
+		allMoves = gamestate.get_all_possible_moves()
+		draw_gamestate(screen, gamestate, squareSelected, allMoves)
 		clock.tick(MAX_FPS)
 		p.display.flip()
 
