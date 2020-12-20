@@ -60,6 +60,9 @@ def main():
 	# pass gamestate
 	gamestate = engine.GameState()
 
+	allMoves = gamestate.get_all_valid_moves()
+	moveMade = False
+
 	# load images
 	load_images()
 
@@ -88,20 +91,28 @@ def main():
 				if len(playerClicks) == 2:
 					# Store move as [Starting Square, Ending Square, moved Piece, capturedPiece]
 					move = engine.Move(list(playerClicks[0]), list(playerClicks[1]), gamestate.board)
-					allMoves = gamestate.get_all_possible_moves()
-					if move in allMoves:
-						gamestate.make_move(move) 
-					else:
-						print('Move not found')
-					print(move.get_chess_notation())
-					print('\n')
-					# reset user input
 					squareSelected = ()
 					playerClicks = []
+					if move in allMoves:
+						gamestate.make_move(move) 
+					# else:
+					#	print('Move ' + move.get_chess_notation() + ' not found')
+					# print('Move ' + move.get_chess_notation())
+					# print('white in check: ', gamestate.in_check()) if gamestate.whiteToMove else print('black in check: ', gamestate.in_check())
+					print(gamestate.whitheKingSq) if gamestate.whiteToMove else print(gamestate.blackKingSq)
+					print('\n')
+					# reset user input
+					moveMade = True
 					
 					# gamestate.make_move(move)
+			elif e.type == p.KEYDOWN:
+				if e.key == p.K_LEFT:
+					gamestate.undo_move()
+					moveMade = True
+		if moveMade:
+			allMoves = gamestate.get_all_valid_moves()
+			moveMade = False
 
-		allMoves = gamestate.get_all_possible_moves()
 		draw_gamestate(screen, gamestate, squareSelected, allMoves)
 		clock.tick(MAX_FPS)
 		p.display.flip()
