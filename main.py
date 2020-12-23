@@ -53,19 +53,30 @@ def highlight_in_check(screen, gamestate):
 		s.fill(p.Color("red"))
 		screen.blit(s, (col*SQ_SIZE, row*SQ_SIZE))
 
-
-
 def draw_gamestate(screen, gamestate, squareSelected, allMoves):
-	draw_board(screen) #draw the squares
-	highlight_square(screen, gamestate, squareSelected, allMoves) #highlight the squares
-	highlight_in_check(screen, gamestate)
-	draw_pieces(screen, gamestate.board) #draw pieces ontop of screen
+	if len(allMoves) != 0:
+		draw_board(screen) #draw the squares
+		highlight_square(screen, gamestate, squareSelected, allMoves) #highlight the squares
+		highlight_in_check(screen, gamestate)
+		draw_pieces(screen, gamestate.board) #draw pieces ontop of screen
+	else:
+		draw_replay(screen, gamestate)
+
+def draw_replay(screen, gamestate):
+	p.font.init() # you have to call this at the start, 
+	myfont = p.font.SysFont('arial', 30)
+	if gamestate.checkmate:
+		textsurface = myfont.render('Checkmate.', True, (220, 0, 0))
+	elif gamestate.stalemate:
+		textsurface = myfont.render('Stalemate.', True, (220, 0, 0))
+	screen.blit(textsurface, (WIDTH // 8, HEIGHT // 4))
+	textsurface = myfont.render('Press r to play again.', True, (220, 0, 0))
+	screen.blit(textsurface, (WIDTH // 8, HEIGHT // 2))
 
 def main():
 	p.init
-	p.mixer.init()
-	p.mixer.music.load(os.path.join("Sound", "move_sound.mp3"))
-
+	p.font.init()
+	
 	# draw scrren
 	screen = p.display.set_mode((WIDTH, HEIGHT))
 	screen.fill(p.Color("white"))
@@ -106,13 +117,20 @@ def main():
 
 				if len(playerClicks) == 2:
 					move = engine.Move(list(playerClicks[0]), list(playerClicks[1]), gamestate.board)
-					squareSelected = ()
-					playerClicks = []
-					if move in allMoves:
-						gamestate.make_move(move)
-						print(gamestate.in_check()) 
 					# reset user input
-					moveMade = True
+					for i in range(len(allMoves)):
+						if move == allMoves[i]:
+							gamestate.make_move(allMoves[i])
+							'''
+							Important lesson:
+								I create the move in the main, but i need to execute the equivalent move in my list,
+								since i can't give information like enpassant. These are constructed in the engine.
+							'''
+							moveMade = True
+							squareSelected = ()
+							playerClicks = []
+					if not moveMade:
+						playerClicks = [squareSelected]
 					
 			elif e.type == p.KEYDOWN:
 				if e.key == p.K_LEFT:
@@ -124,7 +142,6 @@ def main():
 				elif e.key == p.K_SPACE and playing == False:
 					running = False
 		if moveMade:
-			p.mixer.music.play(0)
 			allMoves = gamestate.get_all_valid_moves()
 			moveMade = False
 			if len(allMoves) == 0:

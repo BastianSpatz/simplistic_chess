@@ -23,12 +23,13 @@ class GameState(object):
 										"Q": self.generate_queen_moves,
 										"K": self.generate_king_moves
 										}
-		self.directions = {'orth': [(1, 0), (0, 1), (-1, 0), (0, -1)], 'diag': [(1, 1), (-1, 1), (1, -1), (-1, -1)]}
-		self.whiteToMove = True #store whos turn it is
-		self.moveLog = [] #Store the moves. Also needs to store all the captured and moved pieces.
+		self.directions = {'orth': [(1, 0), (0, 1), (-1, 0), (0, -1)], 'diag': [(1, 1), (-1, 1), (1, -1), (-1, -1)]} # all directions
+		self.whiteToMove = True #s tore whos turn it is
+		self.moveLog = [] # store the moves. Also needs to store all the captured and moved pieces.
 
-		self.whitheKingSq = [7, 4] #Store the position of the white King 
-		self.blackKingSq = [0, 4] #Store the position of the black King
+		self.enpassantSq = ()
+		self.whitheKingSq = [7, 4] # store the position of the white King 
+		self.blackKingSq = [0, 4] # store the position of the black King
 
 		self.checkmate = False
 		self.stalemate = False
@@ -44,23 +45,39 @@ class GameState(object):
 			self.whitheKingSq = [move.endRow, move.endCol]
 		if move.movedPiece== "bK":
 			self.blackKingSq = [move.endRow, move.endCol]
-		if move.movedPiece[1] == "p" and (move.endRow == 0 or move.endRow == 7):
-			move.is_promotion = True
+
+		if move.is_promotion:
 			self.board[move.endRow][move.endCol] = move.movedPiece[0] + "Q"
+
+		if move.movedPiece[1] == "p" and abs(move.startRow - move.endRow) == 2:
+			self.enpassantSq = ((move.endRow + move.startRow)//2, move.endCol)
+		else:
+			self.enpassantSq = ()
+
+		if move.is_enpassant: 
+			self.board[move.startRow][move.endCol] = "--"
+			# print(move.get_chess_notation())
+
 
 		self.moveLog.append(move)
 
-
 	def undo_move(self):
 		if len(self.moveLog) != 0:
-			lastMove = self.moveLog.pop()
-			if lastMove.movedPiece == "wK":
-				self.whitheKingSq = [lastMove.startRow, lastMove.startCol]
-			if lastMove.movedPiece == "bK":
-				self.blackKingSq = [lastMove.startRow, lastMove.startCol]
-			self.board[lastMove.startRow][lastMove.startCol] = lastMove.movedPiece
-			self.board[lastMove.endRow][lastMove.endCol] = lastMove.capturedPiece
+			move = self.moveLog.pop()
+			self.board[move.startRow][move.startCol] = move.movedPiece
+			self.board[move.endRow][move.endCol] = move.capturedPiece
 			self.whiteToMove = not self.whiteToMove
+
+			if move.movedPiece == "wK":
+				self.whitheKingSq = [move.startRow, move.startCol]
+			elif move.movedPiece == "bK":
+				self.blackKingSq = [move.startRow, move.startCol]
+			if move.is_enpassant: 
+				self.board[move.endRow][move.endCol] = "--"
+				self.board[move.startRow][move.endCol] = move.capturedPiece
+				self.enpassantSq = (move.endRow, move.endCol)
+			if move.movedPiece[1] == "p" and abs(move.startRow - move.endRow) == 2:
+				self.enpassantSq = ()
 
 	def in_check(self):
 		if self.whiteToMove:
@@ -91,6 +108,8 @@ class GameState(object):
 		return moves
 
 	def get_all_valid_moves(self):
+		tempEnpassantSq = self.enpassantSq
+		print(tempEnpassantSq)
 		validMoves = self.get_all_possible_moves()
 		for i in range(len(validMoves)-1, -1, -1):
 			self.make_move(validMoves[i])
@@ -106,6 +125,10 @@ class GameState(object):
 			else:
 				self.stalemate = True
 				print('DRAW')
+		else:
+			self.checkmate = False
+			self.stalemate = False
+		self.enpassantSq = tempEnpassantSq
 		return validMoves
 
 	def generate_pawn_moves(self, row, col, moves):
@@ -118,11 +141,18 @@ class GameState(object):
 
 			if col - 1 >= 0: # capture to the left
 				if self.board[row - 1][col - 1][0] == "b":
-					moves.append(Move((row, col), (row - 1, col - 1), self.board))  
+					moves.append(Move((row, col), (row - 1, col - 1), self.board)) 
+				# enpassant move
+				elif self.enpassantSq == (row-1, col-1):
+					moves.append(Move((row, col), (row - 1, col - 1), self.board, is_enpassant=True)) 
+
 
 			if col + 1 <= 7: # capture to the right
 				if self.board[row - 1][col + 1][0] == "b":
 					moves.append(Move((row, col), (row - 1, col + 1), self.board)) 
+				elif self.enpassantSq == (row-1, col+1):
+					moves.append(Move((row, col), (row - 1, col + 1), self.board, is_enpassant=True)) 
+
 
 		elif not self.whiteToMove:
 			if self.board[row + 1][col] == "--": # one square move
@@ -132,11 +162,15 @@ class GameState(object):
 
 			if col - 1 >= 0:
 				if self.board[row + 1][col - 1][0] == "w":
-					moves.append(Move((row, col), (row + 1, col - 1), self.board))  
+					moves.append(Move((row, col), (row + 1, col - 1), self.board)) 
+				elif self.enpassantSq == (row+1, col-1):
+					moves.append(Move((row, col), (row + 1, col - 1), self.board, is_enpassant=True))  
 
 			if col + 1 <= 7:
 				if self.board[row + 1][col + 1][0] == "w":
 					moves.append(Move((row, col), (row + 1, col + 1), self.board)) 
+				elif self.enpassantSq == (row+1, col+1):
+					moves.append(Move((row, col), (row + 1, col + 1), self.board, is_enpassant=True)) 
 
 	def generate_rook_moves(self, row, col, moves):
 		if self.whiteToMove:
@@ -160,6 +194,7 @@ class GameState(object):
 						moves.append(Move((row, col), endSq, self.board))
 						break
 					endSq = tuple(map(lambda x, y: x + y, endSq, d))
+
 
 	def generate_knight_moves(self, row, col, moves):
 		'''
@@ -238,7 +273,6 @@ class GameState(object):
 						moves.append(Move((row, col), endSq, self.board))
 					if self.board[endSq[0]][endSq[1]][0] == "b":
 						moves.append(Move((row, col), endSq, self.board))
-						break
 		if not self.whiteToMove:
 			for d in self.directions['diag'] + self.directions['orth']:
 				endSq = tuple(map(lambda x, y: x + y, (row, col), d))
@@ -246,9 +280,7 @@ class GameState(object):
 					if self.board[endSq[0]][endSq[1]] == "--":
 						moves.append(Move((row, col), endSq, self.board))
 					if self.board[endSq[0]][endSq[1]][0] == "w":
-						moves.append(Move((row, col), endSq, self.board))
-						break
-			
+						moves.append(Move((row, col), endSq, self.board))			
 
 class Move(object):
 	"""docstring for Move"""
@@ -263,17 +295,23 @@ class Move(object):
 
 	# pieceToPoints = {"p": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 4}
 
-	def __init__(self, startSQ, endSQ, board, is_promotion=False):
+	def __init__(self, startSQ, endSQ, board, is_promotion=False, is_enpassant=False):
 		self.pieceToPoints = {"p": 1, "R": 5, "N": 3, "B": 3, "Q": 9, "K": 4}
 		self.startRow = startSQ[0]
 		self.startCol = startSQ[1]
 		self.endRow = endSQ[0]
 		self.endCol = endSQ[1]
 		self.movedPiece = board[self.startRow][self.startCol]
-		self.capturedPiece = board[self.endRow][self.endCol]
+		self.capturedPiece = board[self.endRow][self.endCol] # this becomes empty if we do an enpassant move
 		self.moveId = self.startRow * 1000 + self.startCol * 100 +\
-					self.endRow * 10 + self.endCol * 1 +\
-					self.pieceToPoints[board[self.startRow][self.startCol][1]] 
+					self.endRow * 10 + self.endCol * 1
+
+		self.is_enpassant = is_enpassant
+		if self.is_enpassant:
+			self.capturedPiece = "bp" if self.movedPiece == "wp" else "wp" 
+		self.is_promotion = is_promotion
+		self.is_promotion = (self.movedPiece[1] == "p" and (self.endRow == 0 or self.endRow == 7))
+			
 
 	def __eq__(self, other):
 		if isinstance(other, Move):
