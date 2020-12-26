@@ -3,6 +3,7 @@ import os
 import random
 import sys
 import engine
+import Ai
 
 WIDTH = HEIGHT = 512 #some power of 2 scaled to the images
 DIMENSION = 8
@@ -53,9 +54,23 @@ def highlight_in_check(screen, gamestate):
         s.fill(p.Color("red"))
         screen.blit(s, (col*SQ_SIZE, row*SQ_SIZE))
 
+def highlight_last_move(screen, gamestate):
+    if len(gamestate.moveLog) != 0:
+        lastMove = gamestate.moveLog[-1]
+        rowStart = lastMove.startRow
+        colStart = lastMove.startCol
+        rowEnd = lastMove.endRow
+        colEnd = lastMove.endCol
+        s = p.Surface((SQ_SIZE, SQ_SIZE))
+        s.set_alpha(100)
+        s.fill(p.Color("green"))
+        screen.blit(s, (colStart*SQ_SIZE, rowStart*SQ_SIZE))
+        screen.blit(s, (colEnd*SQ_SIZE, rowEnd*SQ_SIZE))
+
 def draw_gamestate(screen, gamestate, squareSelected, allMoves):
     if len(allMoves) != 0:
         draw_board(screen) #draw the squares
+        highlight_last_move(screen, gamestate)
         highlight_square(screen, gamestate, squareSelected, allMoves) #highlight the squares
         highlight_in_check(screen, gamestate)
         draw_pieces(screen, gamestate.board) #draw pieces ontop of screen
@@ -126,6 +141,11 @@ def main():
                                 I create the move in the main, but i need to execute the equivalent move in my list,
                                 since i can't give information like enpassant. These are constructed in the engine.
                             '''
+                            value, move = Ai.min_max_search(3, gamestate, "b", alpha = -10**16, beta = 10**16)
+                            if move != None:
+                                gamestate.make_move(move)
+                            else:
+                                print("NO MOVE FOUND")
                             moveMade = True
                             squareSelected = ()
                             playerClicks = []
