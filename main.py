@@ -89,6 +89,7 @@ def draw_replay(screen, gamestate):
     screen.blit(textsurface, (WIDTH // 8, HEIGHT // 2))
 
 def main():
+    playAgainstAi = True
     p.init
     p.font.init()
     
@@ -141,11 +142,10 @@ def main():
                                 I create the move in the main, but i need to execute the equivalent move in my list,
                                 since i can't give information like enpassant. These are constructed in the engine.
                             '''
-                            value, move = Ai.min_max_search(3, gamestate, "b", alpha = -10**16, beta = 10**16)
-                            if move != None:
-                                gamestate.make_move(move)
-                            else:
-                                print("NO MOVE FOUND")
+                            if playAgainstAi:
+                                value, move = Ai.min_max_search(3, gamestate, "b", alpha = -10**16, beta = 10**16)
+                                if move != None:
+                                    gamestate.make_move(move)
                             moveMade = True
                             squareSelected = ()
                             playerClicks = []
