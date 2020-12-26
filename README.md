@@ -13,9 +13,10 @@ No real title or endscreen, but replaybility is implemented (it's just not very 
 
 ### Installing
 
-Clone or download the repo and run the main
+Clone or download the repo install the requirements and run the main
 
 ```
+>> pip install -r requirements.txt
 >> python main.py
 ```
 
