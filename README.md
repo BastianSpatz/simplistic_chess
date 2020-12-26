@@ -2,26 +2,21 @@
 
 One Paragraph of project description goes here
 
-## Getting Started
+## Overview
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+A quick and dirty implementation of a chess engine using only pygame to display the board.
+![Screenshot](Images/example.png)
 
-### Prerequisites
+All chess rules are implemented.
+No real title or endscreen, but replaybility is implemented (it's just not very pretty).
 
-What things you need to install the software and how to install them
-
-```
-Give examples
-```
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
+Clone or download the repo and run the main
 
 ```
-Give the example
+>> python main.py
 ```
 
 
