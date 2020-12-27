@@ -5,7 +5,7 @@ import sys
 import engine
 import Ai
 
-WIDTH = HEIGHT = 920 #some power of 2 scaled to the images
+WIDTH = HEIGHT = 512 #some power of 2 scaled to the images
 DIMENSION = 8
 SQ_SIZE = WIDTH // DIMENSION
 MAX_FPS = 15
@@ -126,13 +126,16 @@ def main():
     # load images
     load_images()
 
+    # repetition Log
+    repetionLog = []
+
     # keep track of user inputs 
     squareSelected = ()
     playerClicks = []
-
+    playAgainstAi = True
     playerToMove = True
     running = True # redundant
-    playing = True
+    playing = True # redundant
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -163,12 +166,14 @@ def main():
                             playerClicks = []
                         if not moveMade:
                             playerClicks = [squareSelected]
-            else:
+            elif playAgainstAi:
                 value, move = Ai.min_max_search(2, gamestate, "b", alpha = -10**16, beta = 10**16)
                 if move != None:
                     gamestate.make_move(move)
                     playerToMove = True
                     moveMade = True
+            elif not playAgainstAi:
+                playerToMove = True
 
 
                 # elif:
@@ -184,6 +189,7 @@ def main():
                     
             if e.type == p.KEYDOWN:
                 if e.key == p.K_LEFT:
+                    gamestate.undo_move()
                     gamestate.undo_move()
                     moveMade = True
                 elif e.key == p.K_r and playing == False:

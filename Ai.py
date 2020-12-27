@@ -1,14 +1,15 @@
 import engine
 import random
+import utils
 
 def evaluate_board(gs, color):
 	pieceValues = {
 		"p": 100,
-		"N": 350,
-		"B": 350,
-		"R": 525,
-		"Q": 1000,
-		"K": 10000
+		"N": 320,
+		"B": 330,
+		"R": 500,
+		"Q": 900,
+		"K": 20000
 	}
 
 	value = 0
@@ -20,7 +21,9 @@ def evaluate_board(gs, color):
 
 def min_max_search(depth, gs, playerColor, alpha = -10**16, beta = 10**16, isMaximizingPlayer=True):
 	if depth == 0:
-		value = evaluate_board(gs, playerColor)
+		pieceValue = evaluate_board(gs, playerColor)
+		positionalValue = utils.position_evaluation(gs)
+		value = pieceValue + positionalValue
 		return value, None
 	bestMove = None
 	moves = gs.get_all_valid_moves()
