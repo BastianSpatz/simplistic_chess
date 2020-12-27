@@ -5,7 +5,7 @@ import sys
 import engine
 import Ai
 
-WIDTH = HEIGHT = 512 #some power of 2 scaled to the images
+WIDTH = HEIGHT = 920 #some power of 2 scaled to the images
 DIMENSION = 8
 SQ_SIZE = WIDTH // DIMENSION
 MAX_FPS = 15
@@ -67,14 +67,19 @@ def highlight_last_move(screen, gamestate):
         screen.blit(s, (colStart*SQ_SIZE, rowStart*SQ_SIZE))
         screen.blit(s, (colEnd*SQ_SIZE, rowEnd*SQ_SIZE))
 
-def draw_gamestate(screen, gamestate, squareSelected, allMoves):
-    if len(allMoves) != 0:
+def draw_gamestate(screen, gamestate, squareSelected, allMoves, playing):
+    if playing:
         draw_board(screen) #draw the squares
         highlight_last_move(screen, gamestate)
         highlight_square(screen, gamestate, squareSelected, allMoves) #highlight the squares
         highlight_in_check(screen, gamestate)
         draw_pieces(screen, gamestate.board) #draw pieces ontop of screen
     else:
+        draw_board(screen) #draw the squares
+        highlight_last_move(screen, gamestate)
+        highlight_square(screen, gamestate, squareSelected, allMoves) #highlight the squares
+        highlight_in_check(screen, gamestate)
+        draw_pieces(screen, gamestate.board)
         draw_replay(screen, gamestate)
 
 def draw_replay(screen, gamestate):
@@ -87,6 +92,19 @@ def draw_replay(screen, gamestate):
     screen.blit(textsurface, (WIDTH // 8, HEIGHT // 4))
     textsurface = myfont.render('Press r to play again.', True, (220, 0, 0))
     screen.blit(textsurface, (WIDTH // 8, HEIGHT // 2))
+
+def player_move(playerClicks, gamestate, allMoves):
+    '''
+    Important lesson:
+        I create the move in the main, but i need to execute the equivalent move in my list,
+        since i can't give information like enpassant. These are constructed in the engine.
+    '''
+    move = engine.Move(list(playerClicks[0]), list(playerClicks[1]), gamestate.board)
+    for i in range(len(allMoves)):
+        if move == allMoves[i]:
+            gamestate.make_move(allMoves[i])
+            return True
+    return False
 
 def main():
     playAgainstAi = True
@@ -112,7 +130,8 @@ def main():
     squareSelected = ()
     playerClicks = []
 
-    running = True
+    playerToMove = True
+    running = True # redundant
     playing = True
     while running:
         for e in p.event.get():
@@ -120,39 +139,50 @@ def main():
                 running = False
                 p.quit()
                 sys.exit()
-            elif e.type == p.MOUSEBUTTONDOWN:
-                position = p.mouse.get_pos()
-                row = position[1]//SQ_SIZE
-                col = position[0]//SQ_SIZE
-                if  squareSelected == (row, col):
-                    squareSelected = ()
-                    playerClicks = [] 
-                else:
-                    squareSelected = (row, col)
-                    playerClicks.append(squareSelected)
-
-                if len(playerClicks) == 2:
-                    move = engine.Move(list(playerClicks[0]), list(playerClicks[1]), gamestate.board)
-                    # reset user input
-                    for i in range(len(allMoves)):
-                        if move == allMoves[i]:
-                            gamestate.make_move(allMoves[i])
-                            '''
-                            Important lesson:
-                                I create the move in the main, but i need to execute the equivalent move in my list,
-                                since i can't give information like enpassant. These are constructed in the engine.
-                            '''
-                            if playAgainstAi:
-                                value, move = Ai.min_max_search(3, gamestate, "b", alpha = -10**16, beta = 10**16)
-                                if move != None:
-                                    gamestate.make_move(move)
+            if playerToMove:
+                if e.type == p.MOUSEBUTTONDOWN:
+                    position = p.mouse.get_pos()
+                    row = position[1]//SQ_SIZE
+                    col = position[0]//SQ_SIZE
+                    if  squareSelected == (row, col):
+                        squareSelected = ()
+                        playerClicks = [] 
+                    else:
+                        squareSelected = (row, col)
+                        playerClicks.append(squareSelected)
+                    if len(playerClicks) == 2:
+                        # move = engine.Move(list(playerClicks[0]), list(playerClicks[1]), gamestate.board)
+                        # # reset user input
+                        # for i in range(len(allMoves)):
+                        #     if move == allMoves[i]:
+                        #         gamestate.make_move(allMoves[i])
+                        if player_move(playerClicks, gamestate, allMoves):  
+                            playerToMove = False
                             moveMade = True
                             squareSelected = ()
                             playerClicks = []
-                    if not moveMade:
-                        playerClicks = [squareSelected]
+                        if not moveMade:
+                            playerClicks = [squareSelected]
+            else:
+                value, move = Ai.min_max_search(2, gamestate, "b", alpha = -10**16, beta = 10**16)
+                if move != None:
+                    gamestate.make_move(move)
+                    playerToMove = True
+                    moveMade = True
+
+
+                # elif:
+                #     if playAgainstAi:
+                #         value, move = Ai.min_max_search(3, gamestate, "b", alpha = -10**16, beta = 10**16)
+                #         if move != None:
+                #             gamestate.make_move(move)
+                #     else:
+                #         player_move(playerClicks, gamestate, allMoves)
+                #     playerToMove = not playerToMove       
+                #     moveMade = not moveMade
+
                     
-            elif e.type == p.KEYDOWN:
+            if e.type == p.KEYDOWN:
                 if e.key == p.K_LEFT:
                     gamestate.undo_move()
                     moveMade = True
@@ -164,10 +194,15 @@ def main():
         if moveMade:
             allMoves = gamestate.get_all_valid_moves()
             moveMade = False
-            if len(allMoves) == 0:
+            if len(allMoves) == 0: # white checkmate ?
+                if gamestate.checkmate:
+                    print('CHECKMATE')
+                elif gamestate.stalemate:
+                    print('DRAW')
                 playing = False
+
                 
-        draw_gamestate(screen, gamestate, squareSelected, allMoves)
+        draw_gamestate(screen, gamestate, squareSelected, allMoves, playing)
         clock.tick(MAX_FPS)
         p.display.flip()
 

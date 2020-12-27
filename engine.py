@@ -173,13 +173,14 @@ class GameState(object):
                 validMoves.remove(validMoves[i])
             self.whiteToMove = not self.whiteToMove
             self.undo_move()
+        # check checkmate in the main to avoid check mates in the MinMax algorithm.
         if len(validMoves) == 0:
             if self.in_check():
                 self.checkmate = True
-                print('CHECKMATE')
+                # print('CHECKMATE')
             else:
                 self.stalemate = True
-                print('DRAW')
+                # print('DRAW')
         else:
             self.checkmate = False
             self.stalemate = False
